@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+}
+
+group 'hu.elte.sqat'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Java 8 kompatibilis Selenium verzió
+    implementation 'org.seleniumhq.selenium:selenium-java:4.12.0'
+    
+    // Java 8 kompatibilis, sziklaszilárd TestNG verzió
+    testImplementation 'org.testng:testng:7.5.1'
+}
+
+test {
+    useTestNG()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
