@@ -8,6 +8,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import pages.LoginPage;
+import pages.LoggedInPage;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -18,6 +19,7 @@ public class WobTest {
     protected WebDriver driver;
     protected Properties properties;
     protected LoginPage loginPage;
+    protected LoggedInPage loggedInPage;
 
     @BeforeClass
     public void setUp() throws IOException {
@@ -39,29 +41,50 @@ public class WobTest {
         }
 
         loginPage = new LoginPage(driver);
+        loggedInPage = new LoggedInPage(driver);
     }
 
     @Test(description = "1. Bejelentkező oldal megnyitása és a cím ellenőrzése")
     public void testOpenLoginPage() {
-        // Megnyitjuk a config.properties-ben megadott új URL-t
         loginPage.visit(properties.getProperty("base.url"));
-        
-        // Ellenőrizzük az oldal címét (page_title feladatért pont jár!)
         Assert.assertTrue(driver.getTitle().contains("Test Login") || driver.getTitle().contains("Practice"), 
             "Nem a megfelelő oldal nyílt meg!");
     }
 
-    @Test(dependsOnMethods = "testOpenLoginPage", description = "2. Bejelentkezési űrlap kitöltése és ellenőrzése")
+    @Test(dependsOnMethods = "testOpenLoginPage", description = "2. Bejelentkezési űrlap kitöltése")
     public void testUserLogin() {
-        // Belépés a configból olvasott 'student' és 'Password123' adatokkal
         loginPage.login(
-            properties.getProperty("user.email"), // Ez tartalmazza most a 'student' szöveget
+            properties.getProperty("user.email"), 
             properties.getProperty("user.password")
         );
-        
-        // Ellenőrizzük, hogy valóban megjelent-e a sikeres belépési üzenet (Assertion)
         Assert.assertTrue(loginPage.isLoginSuccessful(), "A bejelentkezés sikertelen volt!");
-        System.out.println("Sikeres bejelentkezés tesztelve!");
+    }
+
+    @Test(dependsOnMethods = "testUserLogin", description = "3. Kijelentkezés végrehajtása és ellenőrzése")
+    public void testUserLogout() {
+        loggedInPage.clickLogout();
+        Assert.assertTrue(driver.getCurrentUrl().contains("login"), "Nem sikerült a kijelentkezés!");
+    }
+
+    // ÚJ TESZTESET: Több oldalas iterációs teszt (multiple_page_test feladathoz!)
+    @Test(dependsOnMethods = "testUserLogout", description = "4. Több aloldal ellenőrzése egy ciklusban")
+    public void testMultiplePagesWithLoop() {
+        // Definiálunk egy tömböt a különböző URL-ekkel
+        String[] urlsToTest = {
+            "https://practicetestautomation.com/",
+            "https://practicetestautomation.com/practice/",
+            "https://practicetestautomation.com/courses/"
+        };
+
+        // Végigmegyünk rajtuk egy ciklussal
+        for (String pageUrl : urlsToTest) {
+            driver.get(pageUrl);
+            // Ellenőrizzük, hogy az oldal címe sikeresen beolvasható és nem üres
+            String title = driver.getTitle();
+            Assert.assertNotNull(title, "Az oldal címe null!");
+            Assert.assertFalse(title.isEmpty(), "Az oldal címe üres ezen az URL-en: " + pageUrl);
+            System.out.println("Sikeresen ellenőrizve: " + pageUrl + " -> Cím: " + title);
+        }
     }
 
     @AfterClass
