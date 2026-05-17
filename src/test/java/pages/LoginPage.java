@@ -7,34 +7,41 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 
 public class LoginPage extends BasePage {
 
-    // 1. XPath az email beviteli mezőhöz
-    private final By emailField = By.xpath("//form//input[@type='email' or @name='email']");
+    // Tisztán strukturált, pontos XPath kifejezések a tesztoldalhoz
+    private final By usernameField = By.xpath("//input[@id='username' or @name='username']");
+    private final By passwordField = By.xpath("//input[@id='password' or @name='password']");
+    private final By submitButton = By.xpath("//button[@id='submit' or contains(text(), 'Submit')]");
     
-    // 2. XPath a jelszó mezőhöz
-    private final By passwordField = By.xpath("//form//input[@type='password' or @name='password']");
-    
-    // 3. XPath a bejelentkezés gombhoz (ellenőrzi, hogy a formon belüli gomb tartalmazza-e a 'Log in' szöveget)
-    private final By loginButton = By.xpath("//form//button[@type='submit' and contains(., 'Log in')]");
+    // Sikeres bejelentkezés után megjelenő üzenet azonosítása (Assertion-höz)
+    private final By successMessage = By.xpath("//h1[contains(@class, 'post-title') or contains(text(), 'Logged In')]");
 
-    // Konstruktor
     public LoginPage(WebDriver driver) {
         super(driver);
     }
 
-    // A funkció, ami kitölti az adatokat és megnyomja a gombot
-    public void login(String email, String password) {
-        // Megvárjuk, amíg az email mező láthatóvá válik, majd kitöltjük
-        WebElement emailInput = wait.until(ExpectedConditions.visibilityOfElementLocated(emailField));
-        emailInput.clear();
-        emailInput.sendKeys(email);
+    public void login(String username, String password) {
+        // Megvárjuk, amíg a felhasználónév mező láthatóvá válik, majd kitöltjük
+        WebElement userInput = wait.until(ExpectedConditions.visibilityOfElementLocated(usernameField));
+        userInput.clear();
+        userInput.sendKeys(username);
 
         // Kitöltjük a jelszót
-        WebElement passwordInput = driver.findElement(passwordField);
-        passwordInput.clear();
-        passwordInput.sendKeys(password);
+        WebElement passInput = wait.until(ExpectedConditions.visibilityOfElementLocated(passwordField));
+        passInput.clear();
+        passInput.sendKeys(password);
 
-        // Rákattintunk a belépés gombra
-        WebElement submitBtn = driver.findElement(loginButton);
-        submitBtn.click();
+        // Rákattintunk a Submit gombra
+        WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(submitButton));
+        btn.click();
+    }
+
+    // Segédfunkció, amivel ellenőrizzük, hogy sikeres volt-e a belépés
+    public boolean isLoginSuccessful() {
+        try {
+            WebElement message = wait.until(ExpectedConditions.visibilityOfElementLocated(successMessage));
+            return message.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
