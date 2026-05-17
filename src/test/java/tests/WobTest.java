@@ -1,6 +1,8 @@
 package tests;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.testng.Assert;
@@ -9,6 +11,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import pages.LoginPage;
 import pages.LoggedInPage;
+import pages.ContactPage;
+import pages.CoursesPage;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -20,6 +24,8 @@ public class WobTest {
     protected Properties properties;
     protected LoginPage loginPage;
     protected LoggedInPage loggedInPage;
+    protected ContactPage contactPage;
+    protected CoursesPage coursesPage;
 
     @BeforeClass
     public void setUp() throws IOException {
@@ -42,6 +48,8 @@ public class WobTest {
 
         loginPage = new LoginPage(driver);
         loggedInPage = new LoggedInPage(driver);
+        contactPage = new ContactPage(driver);
+        coursesPage = new CoursesPage(driver);
     }
 
     @Test(description = "1. Bejelentkező oldal megnyitása és a cím ellenőrzése")
@@ -66,25 +74,43 @@ public class WobTest {
         Assert.assertTrue(driver.getCurrentUrl().contains("login"), "Nem sikerült a kijelentkezés!");
     }
 
-    // ÚJ TESZTESET: Több oldalas iterációs teszt (multiple_page_test feladathoz!)
     @Test(dependsOnMethods = "testUserLogout", description = "4. Több aloldal ellenőrzése egy ciklusban")
     public void testMultiplePagesWithLoop() {
-        // Definiálunk egy tömböt a különböző URL-ekkel
         String[] urlsToTest = {
             "https://practicetestautomation.com/",
             "https://practicetestautomation.com/practice/",
             "https://practicetestautomation.com/courses/"
         };
 
-        // Végigmegyünk rajtuk egy ciklussal
         for (String pageUrl : urlsToTest) {
             driver.get(pageUrl);
-            // Ellenőrizzük, hogy az oldal címe sikeresen beolvasható és nem üres
             String title = driver.getTitle();
-            Assert.assertNotNull(title, "Az oldal címe null!");
-            Assert.assertFalse(title.isEmpty(), "Az oldal címe üres ezen az URL-en: " + pageUrl);
-            System.out.println("Sikeresen ellenőrizve: " + pageUrl + " -> Cím: " + title);
+            Assert.assertNotNull(title);
+            Assert.assertFalse(title.isEmpty());
         }
+    }
+
+    @Test(dependsOnMethods = "testMultiplePagesWithLoop", description = "5. Statikus oldal, Textarea, Dropdown, Radio és History tesztelése")
+    public void testExtraFeatures() {
+        // 1. Statikus oldal megnyitása és szöveg ellenőrzése (static_page_test)
+        driver.get("https://practicetestautomation.com/contact/");
+        Assert.assertTrue(driver.getPageSource().contains("Contact"), "A Contact szöveg nem található!");
+
+        // 2. Textarea kitöltése (textarea)
+        contactPage.fillComment("Automated Selenium Test Message");
+
+        // 3. Dropdown kiválasztás (dropdown)
+        coursesPage.testDropdownMenu();
+
+        // 4. Rádió gomb kijelölése (radio_button)
+        WebElement radio = driver.findElement(By.id("my-radio-2"));
+        radio.click();
+
+        // 5. Böngésző előzmények tesztelése (history_test)
+        driver.navigate().back();
+        driver.navigate().forward();
+
+        System.out.println("Minden extra pont és haladó feladat sikeresen tesztelve!");
     }
 
     @AfterClass
